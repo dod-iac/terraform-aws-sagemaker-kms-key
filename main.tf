@@ -1,38 +1,13 @@
 /**
- * # Terraform Module template
- *
- * This repository is meant to be a template for creating new terraform modules.
- *
- * ## Creating a new Terraform Module
- *
- * 1. Clone this repo, renaming appropriately.
- * 1. Write your terraform code in the root dir.
- * 1. Ensure you've completed the [Developer Setup](#developer-setup).
- * 1. In the root dir, run `go mod init MODULE_NAME` to get a new `go.mod` file. Then run `go mod tidy`. This creates a new `go.sum` file and imports the dependencies and checksums specific to your repository.
- * 1. Run your tests to ensure they work as expected using instructions below.
- *
- * ---
- *
- * <!-- DELETE ABOVE THIS LINE -->
- *
- * ## Description
- *
- * Please put a description of what this module does here
- *
  * ## Usage
  *
- * Add Usage information here
- *
- * Resources:
- *
- * * [Article Example](https://article.example.com)
+ * Creates a KMS key used to encrypt or decrypt data used by SageMaker
  *
  * ```hcl
- * module "example" {
- *   source = "dod-iac/example/aws"
+ * module "sagemaker_kms_key" {
+ *   source = "dod-iac/sagemaker-kms-key/aws"
  *
  *   tags = {
- *     Project     = var.project
  *     Application = var.application
  *     Environment = var.environment
  *     Automation  = "Terraform"
@@ -42,26 +17,69 @@
  *
  * ## Terraform Version
  *
- * Terraform 0.13. Pin module version to ~> 1.0.0 . Submit pull-requests to master branch.
+ * Terraform 0.12 and 0.13. Pin module version to ~> 1.0.0 . Submit pull-requests to master branch.
  *
- * Terraform 0.11 and 0.12 are not supported.
+ * Terraform 0.11 is not supported.
  *
  * ## License
  *
  * This project constitutes a work of the United States Government and is not subject to domestic copyright protection under 17 USC § 105.  However, because the project utilizes code licensed from contributors and other third parties, it therefore is licensed under the MIT License.  See LICENSE file for more information.
- *
- * ## Developer Setup
- *
- * Install dependencies (macOS)
- *
- * ```shell
- * brew install pre-commit terraform terraform-docs
- * pre-commit install --install-hooks
- * ```
- *
  */
 
 data "aws_caller_identity" "current" {}
-# data "aws_iam_account_alias" "current" {}
+
 data "aws_partition" "current" {}
+
 data "aws_region" "current" {}
+
+data "aws_iam_policy_document" "sagemaker" {
+  policy_id = "key-policy-sagemaker"
+  statement {
+    sid    = "Enable IAM User Permissions"
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = [
+        format(
+          "arn:%s:iam::%s:root",
+          data.aws_partition.current.partition,
+          data.aws_caller_identity.current.account_id
+        )
+      ]
+    }
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "AllowSageMaker"
+    actions = [
+      "kms:Encrypt*",
+      "kms:Decrypt*",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:Describe*"
+    ]
+    effect = "Allow"
+    principals {
+      type = "Service"
+      identifiers = [
+        "sagemaker.amazonaws.com",
+      ]
+    }
+    resources = ["*"]
+  }
+}
+
+resource "aws_kms_key" "sagemaker" {
+  description             = var.description
+  deletion_window_in_days = var.key_deletion_window_in_days
+  enable_key_rotation     = "true"
+  policy                  = data.aws_iam_policy_document.sagemaker.json
+  tags                    = var.tags
+}
+
+resource "aws_kms_alias" "sagemaker" {
+  name          = var.name
+  target_key_id = aws_kms_key.sagemaker.key_id
+}
