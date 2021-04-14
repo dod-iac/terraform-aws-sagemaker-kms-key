@@ -64,10 +64,7 @@ data "aws_iam_policy_document" "sagemaker" {
     principals {
       type = "Service"
       identifiers = [
-        format(
-          "sagemaker.%s.amazonaws.com",
-          data.aws_region.current.name,
-        )
+        "sagemaker.amazonaws.com",
       ]
     }
     resources = ["*"]
