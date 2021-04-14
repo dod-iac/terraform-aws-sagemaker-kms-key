@@ -1,38 +1,13 @@
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
-# Terraform Module template
-
-This repository is meant to be a template for creating new terraform modules.
-
-## Creating a new Terraform Module
-
-1. Clone this repo, renaming appropriately.  
-1. Write your terraform code in the root dir.  
-1. Ensure you've completed the [Developer Setup](#developer-setup).  
-1. In the root dir, run `go mod init MODULE_NAME` to get a new `go.mod` file. Then run `go mod tidy`. This creates a new `go.sum` file and imports the dependencies and checksums specific to your repository.  
-1. Run your tests to ensure they work as expected using instructions below.
-
----
-
-<!-- DELETE ABOVE THIS LINE -->
-
-## Description
-
-Please put a description of what this module does here
-
 ## Usage
 
-Add Usage information here
-
-Resources:
-
-* [Article Example](https://article.example.com)
+Creates a KMS key used to encrypt or decrypt data used by SageMaker
 
 ```hcl
-module "example" {
-  source = "dod-iac/example/aws"
+module "sagemaker_kms_key" {
+  source = "dod-iac/sagemaker-kms-key/aws"
 
   tags = {
-    Project     = var.project
     Application = var.application
     Environment = var.environment
     Automation  = "Terraform"
@@ -42,55 +17,56 @@ module "example" {
 
 ## Terraform Version
 
-Terraform 0.13. Pin module version to ~> 1.0.0 . Submit pull-requests to master branch.
+Terraform 0.12 and 0.13. Pin module version to ~> 1.0.0 . Submit pull-requests to master branch.
 
-Terraform 0.11 and 0.12 are not supported.
+Terraform 0.11 is not supported.
 
 ## License
 
 This project constitutes a work of the United States Government and is not subject to domestic copyright protection under 17 USC § 105.  However, because the project utilizes code licensed from contributors and other third parties, it therefore is licensed under the MIT License.  See LICENSE file for more information.
 
-## Developer Setup
-
-Install dependencies (macOS)
-
-```shell
-brew install pre-commit terraform terraform-docs
-pre-commit install --install-hooks
-```
-
 ## Requirements
 
 | Name | Version |
 |------|---------|
-| terraform | >= 0.13 |
-| aws | ~> 3.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 3.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| aws | ~> 3.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 3.0 |
 
 ## Modules
 
-No Modules.
+No modules.
 
 ## Resources
 
-| Name |
-|------|
-| [aws_caller_identity](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) |
-| [aws_partition](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) |
-| [aws_region](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) |
+| Name | Type |
+|------|------|
+| [aws_kms_alias.sagemaker](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
+| [aws_kms_key.sagemaker](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_iam_policy_document.sagemaker](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_partition.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) | data source |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| tags | Tags applied to the AWS resources. | `map(string)` | `{}` | no |
+| <a name="input_description"></a> [description](#input\_description) | The description of the key as viewed in AWS console. | `string` | `"A KMS key used by SageMaker."` | no |
+| <a name="input_key_deletion_window_in_days"></a> [key\_deletion\_window\_in\_days](#input\_key\_deletion\_window\_in\_days) | Duration in days after which the key is deleted after destruction of the resource, must be between 7 and 30 days. | `string` | `30` | no |
+| <a name="input_name"></a> [name](#input\_name) | The display name of the alias. The name must start with the word "alias" followed by a forward slash (alias/). | `string` | `"alias/sagemaker"` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | Tags applied to the KMS key. | `map(string)` | `{}` | no |
 
 ## Outputs
 
-No output.
+| Name | Description |
+|------|-------------|
+| <a name="output_aws_kms_alias_arn"></a> [aws\_kms\_alias\_arn](#output\_aws\_kms\_alias\_arn) | The Amazon Resource Name (ARN) of the key alias. |
+| <a name="output_aws_kms_alias_name"></a> [aws\_kms\_alias\_name](#output\_aws\_kms\_alias\_name) | The display name of the alias. |
+| <a name="output_aws_kms_key_arn"></a> [aws\_kms\_key\_arn](#output\_aws\_kms\_key\_arn) | The Amazon Resource Name (ARN) of the key. |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
